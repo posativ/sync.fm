@@ -1,22 +1,32 @@
-# lastsync
+# sync.fm
 
-lastsync uses your last.fm history to generate playlists based on different
-keys like a song, tags or artist. It offers also some useful tools when
-interacting with last.fm's API and webservices.
+sync.fm is a library and toolchain to use your last.fm history to generate
+playlists and fill your mp3 player with a given amount of tracks. It offers
+also some useful tools when interacting with last.fm's API and webservices.
 
-## tools/scrape.py
+## bin/sync.fm
+
+    # update filesystem
+    python bin/sync.fm update
+    
+    # sync your media player
+    python bin/sync.fm sync
+
+## bin/scrape.py
 
     # downloading whole history using ten simultaneous connections (weee!)
-    python scrape.py -j 10 john > john.txt
+    python bin/scrape.py -j 10 john > john.txt
     
     # updating file
-    python scrape.py john -u john.txt
+    python bin/scrape.py john -u john.txt
     
-scrape.py is a multi-threaded tool to get your (almost) complete last.fm
-scrobbling history. It does not depend on last.fm's REST API, because it
-<del>sucks</del> will not give you your complete history (due some database
+**NOTE**: you have to turn off "hide realtime stats" in profile settings.
+    
+scrape.py is a multi-threaded python script to get your (almost) complete
+last.fm scrobbling history. It does not depend on last.fm's REST API, because
+it <del>sucks</del> will not give you your complete history (due some database
 changes, don't know or whatever) except some scrobbles at really early time (
 early 2008) when you could import your existing iTunes scrobbles.
 
-It creates a flat textfile with timestamp, artist and title separated by
-tab, to simplify shell processing (e.g. `wc -l`).
+It produces a long list of timestamp, artist and title separated by
+tab to simplify shell processing (e.g. `wc -l`).
