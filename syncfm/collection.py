@@ -4,6 +4,7 @@
 # Copyright 2011 posativ <info@posativ.org>. All rights reserved.
 # License: BSD Style, 2 clauses
 
+import sys
 import os
 import collections
 import logging
@@ -224,6 +225,17 @@ class Library:
                         unicode(track.attrib['title']))
                     )
             self.db[artist.attrib['artist']] = tl
+        
+        return self
+        
+    def merge(self, lib):
+        """merge lib into self"""
+        
+        for artist in lib:
+            if not artist in self:
+                self.db[artist] = lib[artist]
+            else:
+                self.db[artist] += lib[artist]
         
         return self
     
