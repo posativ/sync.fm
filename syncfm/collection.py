@@ -164,12 +164,14 @@ class Library:
         
         self.db = collections.defaultdict(TrackList)
         self.path = path
+        self.merges = []
         
     def index(self, ext=['*.mp3']):
         """index the given directory and store it as easy accessible dict.
         Use ext=[ext1, ext2] to include extensions used in fnmatch filtering.
         """
     
+        self._root = self.path
         filelist = []
         # whitelisting using ext=[...], skip failed tracks
         for root, dirs, files in os.walk(self.path, followlinks=True):
@@ -212,6 +214,7 @@ class Library:
             sys.exit(1)
             
         tree = parse(self.path)
+        self._root = tree.getroot().attrib['root']
         for artist in tree.iter('artist'):
             tl = TrackList()
             for track in artist.iter('track'):
@@ -237,7 +240,11 @@ class Library:
             else:
                 self.db[artist] += lib[artist]
         
+        self.merges.append(lib._root)
         return self
+        
+    def __repr__(self):
+        return "<%s '%s'>" % (self.__class__.__name__, ', '.join([self._root] + self.merges))
     
     def __getitem__(self, key):
         for k in self:
