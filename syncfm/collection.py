@@ -186,7 +186,7 @@ class Library:
             try:
                 audio = File(f)
             except MetadataException:
-                log.error("unable to load '%s'. artist and/or title is missing" % f)
+                log.warn("unable to load '%s'. artist and/or title is missing" % f)
                 continue
     
             self.db[audio.artist].append(audio)
