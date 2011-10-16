@@ -6,11 +6,13 @@ also some useful tools when interacting with last.fm's API and webservices.
 
 ## bin/sync.fm
 
-    # update filesystem
-    python bin/sync.fm update
+The workflow is now as follows:
     
-    # sync your media player
-    python bin/sync.fm sync
+    %> sync.fm init posativ
+    %> sync.fm add ~/Music
+    %> scrape.py -j 10 posativ > ~/.sync-fm/lastfm.history
+    %> sync.fm update
+    %> sync.fm sync /media/device/music/
 
 ## bin/scrape.py
 
