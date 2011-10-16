@@ -9,14 +9,13 @@ sys.setdefaultencoding('utf-8')
 
 import logging
 import os
-import time
 import urllib
+import shutil
 
-from os.path import join, expanduser, isdir, isfile, getmtime
+from os.path import join, expanduser, isdir, isfile, getmtime, basename
 
-from syncfm.tools import ColorFormatter
+from syncfm.tools import ColorFormatter, lastfm2local, fat32
 from syncfm.collection import Library, LastfmHistory
-# from syncfm.lastfm import dump
 
 log = logging.getLogger('syncfm')
 
@@ -52,6 +51,8 @@ if __name__ == '__main__':
     fmap = [ expanduser(f) for f in [
             '~/.sync-fm/index/',
             '~/.sync-fm/folders',
+            '~/.sync-fm/index/lookup',
+            '~/.sync-fm/index/library.xml',
         ]]
     
     for fname in fmap:
@@ -112,12 +113,49 @@ if __name__ == '__main__':
         
         # TODO...
         
+        ## apply last.fm history to Library
+        
+        dirs = [line.strip().split('\t')[0] for line in open(fmap[1], 'r')]
+        lib = Library(fmap[0] + urllib.quote_plus(dirs.pop())).load()
+        for dname in dirs:
+            tmp = Library(fmap[0] + urllib.quote_plus(dname)).load()
+            lib.merge(tmp)
+            
+        history = LastfmHistory('posativ.txt')
+        lookuptable = dict([line.strip().split('\t') for line in open(fmap[2], 'r')])
+        
+        lib, lookuptable = lastfm2local(history, lib, lookuptable)
+        with file(fmap[2], 'w') as f:
+            for item in lookuptable:
+                f.write(item + '\t' + lookuptable[item] + '\n')
+        with file(fmap[3], 'w') as f:
+            f.write(lib.toxml())
+        
+        
     elif args[0] == 'sync':
+        
+        if len(args[1:]) < 1:
+            log.fatal('sync requires a valid directory')
+            sys.exit(1)  
+        elif not isdir(args[1]):
+            log.fatal("'%s' is not a directory", args[1])
+            sys.exit(1)
+        
+        device = args[1]
+
+        lib = Library(fmap[3]).load()
+        top_tracks = []
+        
+        for artist in lib:
+            for track in lib[artist]:
+                if track.count >= 25:
+                    top_tracks.append(track)
+        
         
         #lib = Library(fmap[0] + r'%2FUsers%2Fich%2FMusic%2F').load()
         #print lib
         
-        history = LastfmHistory('posativ.txt', 'posativ\'s history')
+        #history = LastfmHistory('posativ.txt', 'posativ\'s history')
         # print history
         
         # top_tracks = []
@@ -126,17 +164,21 @@ if __name__ == '__main__':
         #         if track.count > 20:
         #             top_tracks.append(track)
         #     
-        # for i, t in enumerate(sorted(top_tracks, key=lambda k: k.count, reverse=True)):
-        #     print '%s: %s' % (str(i+1).rjust(2), t)
-        #     
+        for i, t in enumerate(sorted(top_tracks, key=lambda k: k.count, reverse=True)):
+            
+            dirpath = join(device, fat32(t.artist), fat32(t.album))
+            try:
+                os.makedirs(dirpath)
+            except OSError:
+                pass # (already exists)
+            
+            shutil.copy(t.path, join(dirpath, basename(t.path)))
+            print join(dirpath, basename(t.path))
             
             
-        
-                
-            
-            
-            
-                    
+#            print "mkdir -p", join(artist, album)
+#            print "cp -v", "'"+t.path+"'", "'"+join('/Volumes/Memory card/MUSIC/', artist, album) + '/'+"'"
+            #print '%s: %s' % (str(i+1).rjust(2), t)
         
         # log.info("loading lastfm history... '%s'" % options.history)
         # lastfm = fm.read(options.history)
